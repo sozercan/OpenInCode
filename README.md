@@ -4,3 +4,5 @@
 [Download](http://sertacozercan.com/wp-content/uploads/Open-in-Code.app_.zip)	
 
 Usage: Cmd + drag into Finder toolbar
+
+![](http://i.imgur.com/LmVHIxW.gif)
