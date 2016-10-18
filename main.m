@@ -53,18 +53,7 @@ int main(int argc, char *argv[])
 		path =[@"~/Desktop" stringByExpandingTildeInPath];
 	}
     
-    NSPipe *pipe = [NSPipe pipe];
-    NSFileHandle *file = pipe.fileHandleForReading;
-
-    NSTask *task = [[NSTask alloc] init];
-
-    task.launchPath = @"/usr/local/bin/code";
-    task.arguments = @[@"-n", path];
-    
-    task.standardOutput = pipe;
-    
-    [task launch];
-    [file closeFile];
+    [[NSTask launchedTaskWithLaunchPath:@"/usr/bin/open" arguments:@[@"-n", @"-b" ,@"com.microsoft.VSCode", @"--args", path]] waitUntilExit];
   	
 	[pool release];
     return 0;
