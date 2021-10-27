@@ -2,7 +2,7 @@
 :open_file_folder: Finder toolbar app to open current folder in Visual Studio Code
 
 Installation and usage: 
-- Download app for [Light](https://github.com/sozercan/OpenInCode/releases/download/v1.0/OpenInCode.app.zip) or [Dark](https://github.com/sozercan/OpenInCode/releases/download/v1.0/OpenInCodeDark.zip) mode or using `brew cask install open-in-code`
+- Download app for [Light](https://github.com/sozercan/OpenInCode/releases/download/v1.0/OpenInCode.app.zip) or [Dark](https://github.com/sozercan/OpenInCode/releases/download/v1.0/OpenInCodeDark.zip) mode or using `brew install open-in-code`
 (if using [VS Code Insiders](https://code.visualstudio.com/insiders), download [this](https://github.com/sozercan/OpenInCode/releases/download/v1.0/OpenInCodeInsiders.app.zip) instead)
 - Move Open in Code.app to /Applications
 - Go to /Applications
