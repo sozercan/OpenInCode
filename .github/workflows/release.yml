@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
@@ -92,6 +92,7 @@ jobs:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
           MACOS_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PWD }}
+          EXPECTED_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           REQUIRE_DEVELOPER_ID: ${{ github.event_name == 'push' || inputs.publish }}
         run: |
           set -euo pipefail
@@ -106,6 +107,11 @@ jobs:
             echo "identity=-" >> "$GITHUB_OUTPUT"
             echo "mode=adhoc" >> "$GITHUB_OUTPUT"
           }
+
+          if [ "$REQUIRE_DEVELOPER_ID" = "true" ] && [ -z "$EXPECTED_TEAM_ID" ]; then
+            echo "ERROR: APPLE_TEAM_ID is required for public release signing." >&2
+            exit 1
+          fi
 
           if [ -z "$MACOS_CERTIFICATE" ] || [ -z "$MACOS_CERTIFICATE_PWD" ] || [ -z "$MACOS_KEYCHAIN_PWD" ]; then
             fallback_to_adhoc "macOS signing secrets are not configured."
@@ -147,7 +153,12 @@ jobs:
           rm -f "$CERT_PATH"
 
           DEVELOPER_ID=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" 2>/dev/null \
-            | awk '/Developer ID Application/ { print $2; exit }' || true)
+            | awk -v team="$EXPECTED_TEAM_ID" '
+                /Developer ID Application/ && (team == "" || index($0, "(" team ")") > 0) {
+                  print $2
+                  exit
+                }
+              ' || true)
           if [ -n "$DEVELOPER_ID" ]; then
             echo "::add-mask::$DEVELOPER_ID"
             echo "identity=$DEVELOPER_ID" >> "$GITHUB_OUTPUT"
@@ -272,7 +283,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Upload workflow artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ${{ steps.artifact.outputs.filename }}
@@ -305,7 +316,7 @@ jobs:
 
       - name: Checkout Homebrew tap
         if: (github.event_name == 'push' || inputs.publish) && steps.version.outputs.prerelease != 'true'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           repository: sozercan/homebrew-repo
           ssh-key: ${{ secrets.HOMEBREW_REPO_SSH_KEY }}
