@@ -105,16 +105,11 @@ static BOOL openPathInPreferredVSCode(NSString *path, NSString **errorMessage)
 
     NSURL *folderURL = [NSURL fileURLWithPath:path isDirectory:YES];
     NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
-    BOOL foundApplication = NO;
-    NSString *lastLaunchError = nil;
-
     for (NSString *bundleIdentifier in OICPreferredVSCodeBundleIdentifiers()) {
         NSURL *applicationURL = [workspace URLForApplicationWithBundleIdentifier:bundleIdentifier];
         if (applicationURL == nil) {
             continue;
         }
-
-        foundApplication = YES;
 
         NSWorkspaceOpenConfiguration *configuration = [NSWorkspaceOpenConfiguration configuration];
         [configuration setActivates:YES];
@@ -143,25 +138,24 @@ static BOOL openPathInPreferredVSCode(NSString *path, NSString **errorMessage)
 
         if (opened) {
             [attemptError release];
-            [lastLaunchError release];
             return YES;
         }
 
-        [lastLaunchError release];
-        lastLaunchError = attemptError;
+        if (errorMessage != NULL) {
+            if ([attemptError length] > 0) {
+                *errorMessage = [[attemptError copy] autorelease];
+            } else {
+                *errorMessage = @"Visual Studio Code could not open the selected folder.";
+            }
+        }
+
+        [attemptError release];
+        return NO;
     }
 
     if (errorMessage != NULL) {
-        if (!foundApplication) {
-            *errorMessage = @"Install Visual Studio Code or Visual Studio Code Insiders, then try again.";
-        } else if ([lastLaunchError length] > 0) {
-            *errorMessage = [[lastLaunchError copy] autorelease];
-        } else {
-            *errorMessage = @"Visual Studio Code could not open the selected folder.";
-        }
+        *errorMessage = @"Install Visual Studio Code or Visual Studio Code Insiders, then try again.";
     }
-
-    [lastLaunchError release];
     return NO;
 }
 
