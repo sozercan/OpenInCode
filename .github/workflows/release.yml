@@ -285,7 +285,8 @@ jobs:
           path: ${{ steps.artifact.outputs.filename }}
           retention-days: 30
 
-      - name: Create GitHub release
+      - name: Create immutable GitHub release
+        id: release
         if: github.event_name == 'push' || inputs.publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -296,7 +297,7 @@ jobs:
           set -euo pipefail
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$FILE" --clobber
+            echo "Release $TAG already exists; reusing its immutable asset."
           elif [ "$IS_PRERELEASE" = "true" ]; then
             gh release create "$TAG" "$FILE" \
               --target "${{ steps.version.outputs.commit_sha }}" \
@@ -309,6 +310,11 @@ jobs:
               --title "$TAG" \
               --generate-notes
           fi
+
+          rm -f "$FILE"
+          gh release download "$TAG" --pattern "$FILE" --dir .
+          PUBLISHED_SHA256=$(shasum -a 256 "$FILE" | awk '{print $1}')
+          echo "sha256=$PUBLISHED_SHA256" >> "$GITHUB_OUTPUT"
 
       - name: Checkout Homebrew tap
         if: (github.event_name == 'push' || inputs.publish) && steps.version.outputs.prerelease != 'true'
@@ -323,7 +329,7 @@ jobs:
         if: (github.event_name == 'push' || inputs.publish) && steps.version.outputs.prerelease != 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          SHA256: ${{ steps.artifact.outputs.sha256 }}
+          SHA256: ${{ steps.release.outputs.sha256 }}
           TAG: ${{ steps.artifact.outputs.tag }}
         run: |
           set -euo pipefail
