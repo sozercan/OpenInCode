@@ -7,54 +7,179 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <dispatch/dispatch.h>
 #import "Finder.h"
+#import "OpenInCodeCore.h"
 
-NSString* getPathToFrontFinderWindow(){
-	
-	FinderApplication* finder = [SBApplication applicationWithBundleIdentifier:@"com.apple.Finder"];
-    
-	FinderItem *target = [(NSArray*)[[finder selection]get] firstObject];
-    if (target == nil){
-        target = [[[[finder FinderWindows] firstObject] target] get];
+@interface OICScriptingBridgeErrorHandler : NSObject <SBApplicationDelegate> {
+    NSError *_lastError;
+}
+
+@property(nonatomic, retain) NSError *lastError;
+
+@end
+
+@implementation OICScriptingBridgeErrorHandler
+
+@synthesize lastError = _lastError;
+
+- (id)eventDidFail:(const AppleEvent *)event withError:(NSError *)error
+{
+    (void)event;
+    [self setLastError:error];
+    return nil;
+}
+
+- (void)dealloc
+{
+    [_lastError release];
+    [super dealloc];
+}
+
+@end
+
+static void showErrorAlert(NSString *message, NSString *informativeText)
+{
+    [NSApplication sharedApplication];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+    [NSApp activateIgnoringOtherApps:YES];
+
+    NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert setMessageText:message];
+    [alert setInformativeText:informativeText];
+    [alert addButtonWithTitle:@"OK"];
+    [alert runModal];
+}
+
+static NSString *pathToFrontFinderLocation(NSString **errorMessage)
+{
+    @try {
+        FinderApplication *finder = [SBApplication applicationWithBundleIdentifier:@"com.apple.Finder"];
+        OICScriptingBridgeErrorHandler *errorHandler = [[[OICScriptingBridgeErrorHandler alloc] init] autorelease];
+        [finder setDelegate:errorHandler];
+
+        FinderItem *target = [(NSArray *)[[finder selection] get] firstObject];
+
+        if (target == nil) {
+            target = [[[[finder FinderWindows] firstObject] target] get];
+        }
+
+        NSString *targetURLString = [target URL];
+        if ([targetURLString length] == 0) {
+            if (errorMessage != NULL) {
+                if ([errorHandler lastError] != nil) {
+                    *errorMessage = @"Allow Open in Code to control Finder in System Settings > Privacy & Security > Automation, then try again.";
+                } else {
+                    *errorMessage = @"Open a Finder window for a local folder and try again.";
+                }
+            }
+            return nil;
+        }
+
+        NSString *path = OICPathForFinderURL([NSURL URLWithString:targetURLString]);
+        if ([path length] == 0 && errorMessage != NULL) {
+            *errorMessage = @"The selected Finder item does not have an accessible local path.";
+        }
+
+        return path;
     }
-	
-	NSURL* url =[NSURL URLWithString:target.URL];
-	NSError* error;
-	NSData* bookmark = [NSURL bookmarkDataWithContentsOfURL:url error:nil];
-    NSURL* fullUrl = [NSURL URLByResolvingBookmarkData:bookmark
-                                        options:NSURLBookmarkResolutionWithoutUI
-                                  relativeToURL:nil
-                            bookmarkDataIsStale:nil
-                                          error:&error];
-    if(fullUrl != nil){
-        url = fullUrl;
+    @catch (NSException *exception) {
+        if (errorMessage != NULL) {
+            *errorMessage = @"Allow Open in Code to control Finder in System Settings > Privacy & Security > Automation, then try again.";
+        }
+        return nil;
+    }
+}
+
+static BOOL openPathInPreferredVSCode(NSString *path, NSString **errorMessage)
+{
+    if ([path length] == 0) {
+        if (errorMessage != NULL) {
+            *errorMessage = @"No folder path was available to open.";
+        }
+        return NO;
     }
 
-	NSString* path = [[url path] stringByExpandingTildeInPath];
+    NSURL *folderURL = [NSURL fileURLWithPath:path isDirectory:YES];
+    NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
+    BOOL foundApplication = NO;
+    NSString *lastLaunchError = nil;
 
-    BOOL isDir = NO;
-    [[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDir];
+    for (NSString *bundleIdentifier in OICPreferredVSCodeBundleIdentifiers()) {
+        NSURL *applicationURL = [workspace URLForApplicationWithBundleIdentifier:bundleIdentifier];
+        if (applicationURL == nil) {
+            continue;
+        }
 
-	if(!isDir){
-		path = [path stringByDeletingLastPathComponent];
-	}
+        foundApplication = YES;
 
-	return path;
+        NSWorkspaceOpenConfiguration *configuration = [NSWorkspaceOpenConfiguration configuration];
+        [configuration setActivates:YES];
+        [configuration setPromptsUserIfNeeded:YES];
+        [configuration setAllowsRunningApplicationSubstitution:NO];
+
+        dispatch_semaphore_t completion = dispatch_semaphore_create(0);
+        __block BOOL opened = NO;
+        __block NSString *attemptError = nil;
+
+        [workspace openURLs:@[folderURL]
+       withApplicationAtURL:applicationURL
+              configuration:configuration
+          completionHandler:^(NSRunningApplication *application, NSError *error) {
+              opened = application != nil && error == nil;
+              if (error != nil) {
+                  attemptError = [[error localizedDescription] copy];
+              }
+              dispatch_semaphore_signal(completion);
+          }];
+
+        dispatch_semaphore_wait(completion, DISPATCH_TIME_FOREVER);
+#if !OS_OBJECT_USE_OBJC
+        dispatch_release(completion);
+#endif
+
+        if (opened) {
+            [attemptError release];
+            [lastLaunchError release];
+            return YES;
+        }
+
+        [lastLaunchError release];
+        lastLaunchError = attemptError;
+    }
+
+    if (errorMessage != NULL) {
+        if (!foundApplication) {
+            *errorMessage = @"Install Visual Studio Code or Visual Studio Code Insiders, then try again.";
+        } else if ([lastLaunchError length] > 0) {
+            *errorMessage = [[lastLaunchError copy] autorelease];
+        } else {
+            *errorMessage = @"Visual Studio Code could not open the selected folder.";
+        }
+    }
+
+    [lastLaunchError release];
+    return NO;
 }
 
 int main(int argc, char *argv[])
 {
-	id pool = [[NSAutoreleasePool alloc] init];
-	
-	NSString* path;
-	@try{
-		path = getPathToFrontFinderWindow();
-	}@catch(id ex){
-		path =[@"~/Desktop" stringByExpandingTildeInPath];
-	}
-    
-    [[NSTask launchedTaskWithLaunchPath:@"/usr/bin/open" arguments:@[@"-n", @"-b" ,@"com.microsoft.VSCode", @"--args", path]] waitUntilExit];
-  	
-	[pool release];
-    return 0;
+    @autoreleasepool {
+        NSString *finderError = nil;
+        NSString *path = pathToFrontFinderLocation(&finderError);
+
+        if ([path length] == 0) {
+            showErrorAlert(@"Couldn’t read the Finder location", finderError ?: @"Open a Finder window and try again.");
+            return 1;
+        }
+
+        NSString *launchError = nil;
+        if (!openPathInPreferredVSCode(path, &launchError)) {
+            showErrorAlert(@"Couldn’t open Visual Studio Code", launchError ?: @"The application could not be launched.");
+            return 2;
+        }
+
+        return 0;
+    }
 }

@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Open in Code</string>
 	<key>CFBundleIconFile</key>
-	<string>icon.icns</string>
+	<string>vscode</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -17,19 +17,19 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.1.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.7</string>
+	<string>12.0</string>
 	<key>LSUIElement</key>
 	<string>1</string>
-	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Open in Code uses Finder to determine which folder or selected item to open in Visual Studio Code.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
