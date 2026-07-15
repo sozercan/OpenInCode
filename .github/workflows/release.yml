@@ -62,10 +62,10 @@ jobs:
 
       - name: Verify Homebrew tap credentials
         env:
-          HOMEBREW_REPO_TOKEN: ${{ secrets.HOMEBREW_REPO_TOKEN }}
+          HOMEBREW_REPO_SSH_KEY: ${{ secrets.HOMEBREW_REPO_SSH_KEY }}
         run: |
-          if [ -z "$HOMEBREW_REPO_TOKEN" ]; then
-            echo "::error::HOMEBREW_REPO_TOKEN must have Contents read/write access to sozercan/homebrew-repo."
+          if [ -z "$HOMEBREW_REPO_SSH_KEY" ]; then
+            echo "::error::HOMEBREW_REPO_SSH_KEY must be a write-enabled deploy key for sozercan/homebrew-repo."
             exit 1
           fi
 
@@ -286,7 +286,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4
         with:
           repository: sozercan/homebrew-repo
-          token: ${{ secrets.HOMEBREW_REPO_TOKEN }}
+          ssh-key: ${{ secrets.HOMEBREW_REPO_SSH_KEY }}
           path: homebrew-repo
           fetch-depth: 0
 

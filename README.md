@@ -61,7 +61,7 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`. The workflow builds a u
 
 Configure this required Actions secret before publishing:
 
-- `HOMEBREW_REPO_TOKEN`: a fine-grained token with **Contents: Read and write** access to `sozercan/homebrew-repo`
+- `HOMEBREW_REPO_SSH_KEY`: the private half of a write-enabled deploy key for `sozercan/homebrew-repo`
 
 Optional signing and notarization secrets follow the same convention as Kaset:
 
