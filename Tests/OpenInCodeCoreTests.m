@@ -28,10 +28,13 @@ int main(void)
         NSString *directorySymlinkPath = [temporaryRoot stringByAppendingPathComponent:@"LinkedProject"];
         NSURL *folderAliasURL = [NSURL fileURLWithPath:[temporaryRoot stringByAppendingPathComponent:@"Project Folder.alias"]];
         NSURL *fileAliasURL = [NSURL fileURLWithPath:[temporaryRoot stringByAppendingPathComponent:@"Project File.alias"]];
+        NSString *deletedTargetPath = [temporaryRoot stringByAppendingPathComponent:@"Deleted Target.txt"];
+        NSURL *brokenAliasURL = [NSURL fileURLWithPath:[temporaryRoot stringByAppendingPathComponent:@"Broken Target.alias"]];
 
         NSFileManager *fileManager = [NSFileManager defaultManager];
         assertTrue([fileManager createDirectoryAtPath:folderPath withIntermediateDirectories:YES attributes:nil error:nil], @"create test folder");
         assertTrue([@"test" writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:nil], @"create test file");
+        assertTrue([@"delete me" writeToFile:deletedTargetPath atomically:YES encoding:NSUTF8StringEncoding error:nil], @"create deleted alias target");
         assertTrue([fileManager createDirectoryAtPath:packagePath withIntermediateDirectories:YES attributes:nil error:nil], @"create test package");
         assertTrue([fileManager createSymbolicLinkAtPath:directorySymlinkPath withDestinationPath:folderPath error:nil], @"create directory symlink");
 
@@ -45,10 +48,18 @@ int main(void)
             includingResourceValuesForKeys:nil
             relativeToURL:nil
             error:nil];
+        NSData *deletedTargetBookmark = [[NSURL fileURLWithPath:deletedTargetPath]
+            bookmarkDataWithOptions:NSURLBookmarkCreationSuitableForBookmarkFile
+            includingResourceValuesForKeys:nil
+            relativeToURL:nil
+            error:nil];
         assertTrue(folderBookmark != nil, @"create folder bookmark data");
         assertTrue(fileBookmark != nil, @"create file bookmark data");
+        assertTrue(deletedTargetBookmark != nil, @"create deleted-target bookmark data");
         assertTrue([NSURL writeBookmarkData:folderBookmark toURL:folderAliasURL options:0 error:nil], @"create folder alias");
         assertTrue([NSURL writeBookmarkData:fileBookmark toURL:fileAliasURL options:0 error:nil], @"create file alias");
+        assertTrue([NSURL writeBookmarkData:deletedTargetBookmark toURL:brokenAliasURL options:0 error:nil], @"create broken alias");
+        assertTrue([fileManager removeItemAtPath:deletedTargetPath error:nil], @"delete alias target");
 
         NSURL *resolvedFolderAliasURL = [NSURL URLByResolvingAliasFileAtURL:folderAliasURL options:NSURLBookmarkResolutionWithoutUI error:nil];
         NSURL *resolvedFileAliasURL = [NSURL URLByResolvingAliasFileAtURL:fileAliasURL options:NSURLBookmarkResolutionWithoutUI error:nil];
@@ -63,6 +74,7 @@ int main(void)
         assertTrue([OICPathForFinderURL([NSURL fileURLWithPath:directorySymlinkPath]) isEqualToString:directorySymlinkPath], @"directory symlink should open the linked directory");
         assertTrue([OICPathForFinderURL(folderAliasURL) isEqualToString:resolvedFolderAliasPath], @"folder alias should resolve to its target");
         assertTrue([OICPathForFinderURL(fileAliasURL) isEqualToString:resolvedFileAliasParentPath], @"file alias should resolve to its target parent");
+        assertTrue(OICPathForFinderURL(brokenAliasURL) == nil, @"broken alias must return nil");
         assertTrue(OICPathForFinderURL([NSURL fileURLWithPath:[temporaryRoot stringByAppendingPathComponent:@"missing"]]) == nil, @"missing item must return nil");
 
         assertTrue([fileManager removeItemAtPath:temporaryRoot error:nil], @"remove test files");

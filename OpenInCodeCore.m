@@ -21,9 +21,10 @@ NSString *OICPathForFinderURL(NSURL *url)
                                                  relativeToURL:nil
                                            bookmarkDataIsStale:nil
                                                          error:nil];
-        if (resolvedURL != nil) {
-            url = resolvedURL;
+        if (resolvedURL == nil) {
+            return nil;
         }
+        url = resolvedURL;
     }
 
     NSString *path = [[url path] stringByExpandingTildeInPath];
