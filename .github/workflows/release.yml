@@ -296,19 +296,45 @@ jobs:
         run: |
           set -euo pipefail
 
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; reusing its immutable asset."
-          elif [ "$IS_PRERELEASE" = "true" ]; then
-            gh release create "$TAG" "$FILE" \
-              --target "${{ steps.version.outputs.commit_sha }}" \
-              --title "$TAG" \
-              --generate-notes \
-              --prerelease
+          asset_exists() {
+            gh release view "$TAG" --json assets --jq '.assets[] | [.name, .state] | @tsv' \
+              | awk -F '\t' -v file="$FILE" '
+                  $1 == file && $2 == "uploaded" { found = 1 }
+                  END { exit(found ? 0 : 1) }
+                '
+          }
+
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            if [ "$IS_PRERELEASE" = "true" ]; then
+              gh release create "$TAG" "$FILE" \
+                --target "${{ steps.version.outputs.commit_sha }}" \
+                --title "$TAG" \
+                --generate-notes \
+                --prerelease || true
+            else
+              gh release create "$TAG" "$FILE" \
+                --target "${{ steps.version.outputs.commit_sha }}" \
+                --title "$TAG" \
+                --generate-notes || true
+            fi
+
+            if ! gh release view "$TAG" >/dev/null 2>&1; then
+              echo "Failed to create release $TAG." >&2
+              exit 1
+            fi
+          fi
+
+          if asset_exists; then
+            echo "Release $TAG already contains immutable asset $FILE."
           else
-            gh release create "$TAG" "$FILE" \
-              --target "${{ steps.version.outputs.commit_sha }}" \
-              --title "$TAG" \
-              --generate-notes
+            echo "Release $TAG is missing $FILE; restoring the asset without clobbering."
+            if ! gh release upload "$TAG" "$FILE"; then
+              echo "Asset upload raced with another recovery; verifying the published asset."
+              asset_exists || {
+                echo "Release $TAG still has no uploaded $FILE asset." >&2
+                exit 1
+              }
+            fi
           fi
 
           rm -f "$FILE"
