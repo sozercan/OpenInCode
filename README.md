@@ -10,9 +10,17 @@ OpenInCode prefers stable Visual Studio Code and falls back to Visual Studio Cod
 - Visual Studio Code or Visual Studio Code Insiders
 - Xcode 26 or newer to build the current Icon Composer asset
 
-## Build and install
+## Install
 
-The legacy v1.0 binaries and Homebrew cask are no longer maintained. Build the current version from source:
+Install the latest release from the Homebrew tap:
+
+```sh
+brew install --cask sozercan/repo/open-in-code
+```
+
+Release archives are also available from the [GitHub Releases](https://github.com/sozercan/OpenInCode/releases) page.
+
+To build from source:
 
 1. Clone this repository.
 2. Open `Open in Code.xcodeproj` in Xcode.
@@ -46,3 +54,18 @@ xcodebuild \
   CODE_SIGNING_ALLOWED=NO \
   clean build
 ```
+
+## Publishing a release
+
+Pushing a `v*` tag runs `.github/workflows/release.yml`. The workflow builds a universal app, signs it, creates a GitHub release, and updates `Casks/open-in-code.rb` in [`sozercan/homebrew-repo`](https://github.com/sozercan/homebrew-repo).
+
+Configure this required Actions secret before publishing:
+
+- `HOMEBREW_REPO_TOKEN`: a fine-grained token with **Contents: Read and write** access to `sozercan/homebrew-repo`
+
+Optional signing and notarization secrets follow the same convention as Kaset:
+
+- `MACOS_CERTIFICATE`, `MACOS_CERTIFICATE_PWD`, `MACOS_KEYCHAIN_PWD`
+- `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`
+
+Without a signing certificate, the workflow uses ad-hoc signing unless `require_developer_id` is enabled for a manual run.
