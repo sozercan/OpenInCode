@@ -143,7 +143,8 @@ static BOOL openPathInPreferredVSCode(NSString *path, NSString **errorMessage)
 
         if (errorMessage != NULL) {
             if ([attemptError length] > 0) {
-                *errorMessage = [[attemptError copy] autorelease];
+                *errorMessage = [attemptError autorelease];
+                attemptError = nil;
             } else {
                 *errorMessage = @"Visual Studio Code could not open the selected folder.";
             }

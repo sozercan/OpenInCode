@@ -14,8 +14,16 @@ NSString *OICPathForFinderURL(NSURL *url)
         return nil;
     }
 
-    NSData *bookmark = [NSURL bookmarkDataWithContentsOfURL:url error:nil];
-    if (bookmark != nil) {
+    NSNumber *isAliasFile = nil;
+    NSNumber *isSymbolicLink = nil;
+    [url getResourceValue:&isAliasFile forKey:NSURLIsAliasFileKey error:nil];
+    [url getResourceValue:&isSymbolicLink forKey:NSURLIsSymbolicLinkKey error:nil];
+    if ([isAliasFile boolValue] && ![isSymbolicLink boolValue]) {
+        NSData *bookmark = [NSURL bookmarkDataWithContentsOfURL:url error:nil];
+        if (bookmark == nil) {
+            return nil;
+        }
+
         NSURL *resolvedURL = [NSURL URLByResolvingBookmarkData:bookmark
                                                        options:NSURLBookmarkResolutionWithoutUI
                                                  relativeToURL:nil
