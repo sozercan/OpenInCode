@@ -1,9 +1,5 @@
 name: Release
 
-concurrency:
-  group: openincode-release-publication
-  cancel-in-progress: false
-
 on:
   push:
     tags:
@@ -299,19 +295,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          PRERELEASE=()
-          if [ "$IS_PRERELEASE" = "true" ]; then
-            PRERELEASE=(--prerelease)
-          fi
-
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$FILE" --clobber
-          else
+          elif [ "$IS_PRERELEASE" = "true" ]; then
             gh release create "$TAG" "$FILE" \
               --target "${{ steps.version.outputs.commit_sha }}" \
               --title "$TAG" \
               --generate-notes \
-              "${PRERELEASE[@]}"
+              --prerelease
+          else
+            gh release create "$TAG" "$FILE" \
+              --target "${{ steps.version.outputs.commit_sha }}" \
+              --title "$TAG" \
+              --generate-notes
           fi
 
       - name: Checkout Homebrew tap
@@ -332,20 +328,48 @@ jobs:
         run: |
           set -euo pipefail
 
-          ./scripts/render-homebrew-cask.sh \
-            "$VERSION" \
-            "$SHA256" \
-            homebrew-repo/Casks/open-in-code.rb
-
           cd homebrew-repo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Casks/open-in-code.rb
 
-          if git diff --cached --quiet; then
-            echo "Homebrew cask is already up to date."
-            exit 0
-          fi
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
 
-          git commit -s -m "Update open-in-code to ${TAG}"
-          git push origin main
+            CURRENT_VERSION="0"
+            if [ -f Casks/open-in-code.rb ]; then
+              CURRENT_VERSION=$(sed -n 's/^  version "\([^"]*\)"/\1/p' Casks/open-in-code.rb | head -1)
+            fi
+
+            if ruby -e '
+              require "rubygems"
+              current = Gem::Version.new(ARGV.fetch(0))
+              candidate = Gem::Version.new(ARGV.fetch(1))
+              exit(current > candidate ? 0 : 1)
+            ' "$CURRENT_VERSION" "$VERSION"; then
+              echo "Homebrew already contains newer version $CURRENT_VERSION; skipping stale release $VERSION."
+              exit 0
+            fi
+
+            ../scripts/render-homebrew-cask.sh \
+              "$VERSION" \
+              "$SHA256" \
+              Casks/open-in-code.rb
+            git add Casks/open-in-code.rb
+
+            if git diff --cached --quiet; then
+              echo "Homebrew cask is already up to date."
+              exit 0
+            fi
+
+            git commit -s -m "Update open-in-code to ${TAG}"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+
+            echo "Homebrew push attempt $attempt raced with another update; retrying..."
+            sleep $((attempt * 5))
+          done
+
+          echo "Failed to update the Homebrew cask after retries." >&2
+          exit 1
