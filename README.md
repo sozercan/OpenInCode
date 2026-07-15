@@ -21,7 +21,10 @@ The legacy v1.0 binaries and Homebrew cask are no longer maintained. Build the c
 5. Hold Command and drag the app from `/Applications` to a Finder toolbar.
 6. Click the toolbar icon while viewing a folder or selecting a file.
 
-The first use asks for permission to control Finder. If permission was denied, enable **Open in Code → Finder** in **System Settings → Privacy & Security → Automation**.
+The first use asks for permission to control Finder. If permission was denied, enable **Open in Code → Finder** here:
+
+- macOS 13 or newer: **System Settings → Privacy & Security → Automation**
+- macOS 12: **System Preferences → Security & Privacy → Privacy → Automation**
 
 Release archives are configured for hardened runtime and the project publisher team. Fork maintainers should override `DEVELOPMENT_TEAM` with their own team and provide a Developer ID Application certificate. Notarize public release artifacts before distribution.
 

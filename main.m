@@ -11,6 +11,8 @@
 #import "Finder.h"
 #import "OpenInCodeCore.h"
 
+static NSString * const FinderAutomationPermissionMessage = @"Open the Automation privacy settings and allow Open in Code to control Finder, then try again.";
+
 @interface OICScriptingBridgeErrorHandler : NSObject <SBApplicationDelegate> {
     NSError *_lastError;
 }
@@ -69,7 +71,7 @@ static NSString *pathToFrontFinderLocation(NSString **errorMessage)
         if ([targetURLString length] == 0) {
             if (errorMessage != NULL) {
                 if ([errorHandler lastError] != nil) {
-                    *errorMessage = @"Allow Open in Code to control Finder in System Settings > Privacy & Security > Automation, then try again.";
+                    *errorMessage = FinderAutomationPermissionMessage;
                 } else {
                     *errorMessage = @"Open a Finder window for a local folder and try again.";
                 }
@@ -86,7 +88,7 @@ static NSString *pathToFrontFinderLocation(NSString **errorMessage)
     }
     @catch (NSException *exception) {
         if (errorMessage != NULL) {
-            *errorMessage = @"Allow Open in Code to control Finder in System Settings > Privacy & Security > Automation, then try again.";
+            *errorMessage = FinderAutomationPermissionMessage;
         }
         return nil;
     }
