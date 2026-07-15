@@ -59,13 +59,10 @@ xcodebuild \
 
 Pushing a `v*` tag runs `.github/workflows/release.yml`. The workflow builds a universal app, signs it, creates a GitHub release, and updates `Casks/open-in-code.rb` in [`sozercan/homebrew-repo`](https://github.com/sozercan/homebrew-repo).
 
-Configure this required Actions secret before publishing:
+Public releases require all of these Actions secrets:
 
 - `HOMEBREW_REPO_SSH_KEY`: the private half of a write-enabled deploy key for `sozercan/homebrew-repo`
+- `MACOS_CERTIFICATE`, `MACOS_CERTIFICATE_PWD`, `MACOS_KEYCHAIN_PWD`: a Developer ID Application PKCS#12 and its temporary keychain credentials
+- `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`: notarization credentials
 
-Optional signing and notarization secrets follow the same convention as Kaset:
-
-- `MACOS_CERTIFICATE`, `MACOS_CERTIFICATE_PWD`, `MACOS_KEYCHAIN_PWD`
-- `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`
-
-Without a signing certificate, the workflow uses ad-hoc signing unless `require_developer_id` is enabled for a manual run.
+Tag pushes and manual runs with `publish=true` fail unless Developer ID signing and notarization succeed. A manual run with `publish=false` may use ad-hoc signing for validation, but it never creates a GitHub release or updates Homebrew. Prerelease tags create GitHub prereleases but do not replace the stable Homebrew cask.

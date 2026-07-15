@@ -38,10 +38,6 @@ cask "open-in-code" do
 
   app "Open in Code.app"
 
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-cr", "#{appdir}/Open in Code.app"], sudo: false
-  end
-
   zap trash: [
     "~/Library/Preferences/com.sertacozercan.openincode.plist",
     "~/Library/Saved Application State/com.sertacozercan.openincode.savedState",
