@@ -51,21 +51,23 @@ jobs:
             TAG="$REF_TAG"
           fi
 
-          if [[ ! "$TAG" =~ ^v[0-9]+([.][0-9]+)*([.-][0-9A-Za-z.-]+)?$ ]]; then
+          if [[ ! "$TAG" =~ ^v[0-9]+([.][0-9]+){0,2}(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
             echo "Invalid release tag: $TAG" >&2
             exit 1
           fi
 
           VERSION="${TAG#v}"
+          BUNDLE_VERSION="${VERSION%%-*}"
           COMMIT_SHA=$(git rev-parse HEAD)
           PRERELEASE=false
-          if [[ ! "$TAG" =~ ^v[0-9]+([.][0-9]+)*$ ]]; then
+          if [ "$VERSION" != "$BUNDLE_VERSION" ]; then
             PRERELEASE=true
           fi
 
           {
             echo "tag=$TAG"
             echo "version=$VERSION"
+            echo "bundle_version=$BUNDLE_VERSION"
             echo "commit_sha=$COMMIT_SHA"
             echo "prerelease=$PRERELEASE"
           } >> "$GITHUB_OUTPUT"
@@ -135,7 +137,11 @@ jobs:
 
           EXISTING_KEYCHAINS=()
           while IFS= read -r keychain; do
-            EXISTING_KEYCHAINS+=("${keychain//\"/}")
+            keychain="${keychain#*\"}"
+            keychain="${keychain%%\"*}"
+            if [ -n "$keychain" ]; then
+              EXISTING_KEYCHAINS+=("$keychain")
+            fi
           done < <(security list-keychains -d user)
           security list-keychains -d user -s "$KEYCHAIN_PATH" "${EXISTING_KEYCHAINS[@]}"
           rm -f "$CERT_PATH"
@@ -165,6 +171,7 @@ jobs:
         id: app
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          BUNDLE_VERSION: ${{ steps.version.outputs.bundle_version }}
           SIGNING_IDENTITY: ${{ steps.signing.outputs.identity }}
           SIGNING_MODE: ${{ steps.signing.outputs.mode }}
         run: |
@@ -188,7 +195,7 @@ jobs:
           EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/Open in Code"
 
           test -d "$APP_PATH"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $BUNDLE_VERSION" "$PLIST_PATH"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" "$PLIST_PATH"
 
           ARCHITECTURES=$(lipo -archs "$EXECUTABLE_PATH")
