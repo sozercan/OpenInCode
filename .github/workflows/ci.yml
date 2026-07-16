@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-package:
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+      - name: Run focused tests
+        run: ./scripts/test.sh
+
+      - name: Build universal app
+        env:
+          ARCHES: "arm64 x86_64"
+        run: ./scripts/build-app.sh release
+
+      - name: Verify packaged app
+        run: |
+          set -euo pipefail
+
+          APP_PATH="$PWD/.build/app/Open in Code.app"
+          EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/Open in Code"
+
+          test -d "$APP_PATH"
+          test -f "$APP_PATH/Contents/Resources/Assets.car"
+          test -f "$APP_PATH/Contents/Resources/vscode.icns"
+          plutil -lint "$APP_PATH/Contents/Info.plist"
+
+          ARCHITECTURES=$(lipo -archs "$EXECUTABLE_PATH")
+          echo "Architectures: $ARCHITECTURES"
+          [[ "$ARCHITECTURES" == *arm64* ]]
+          [[ "$ARCHITECTURES" == *x86_64* ]]
+
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          ENTITLEMENTS=$(codesign -d --entitlements :- "$APP_PATH" 2>/dev/null)
+          grep -F 'com.apple.security.automation.apple-events' <<< "$ENTITLEMENTS" >/dev/null

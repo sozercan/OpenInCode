@@ -9,7 +9,7 @@
 	<key>CFBundleIconFile</key>
 	<string>vscode</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>com.sertacozercan.openincode</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -32,5 +32,7 @@
 	<string>Open in Code uses Finder to determine which folder or selected item to open in Visual Studio Code.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>CFBundleIconName</key>
+	<string>vscode</string>
 </dict>
 </plist>

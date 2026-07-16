@@ -8,7 +8,8 @@ OpenInCode prefers stable Visual Studio Code and falls back to Visual Studio Cod
 
 - macOS 12 or newer
 - Visual Studio Code or Visual Studio Code Insiders
-- Xcode 26 or newer to build the current Icon Composer asset
+- Swift 6.2 or newer
+- Xcode 26 or newer for the `actool` step that compiles the current Icon Composer asset
 
 ## Install
 
@@ -23,37 +24,34 @@ Release archives are also available from the [GitHub Releases](https://github.co
 To build from source:
 
 1. Clone this repository.
-2. Open `Open in Code.xcodeproj` in Xcode.
-3. Build the Debug configuration for local use, or select a Developer ID Application certificate before archiving Release.
-4. Copy `Open in Code.app` to `/Applications`.
-5. Hold Command and drag the app from `/Applications` to a Finder toolbar.
-6. Click the toolbar icon while viewing a folder or selecting a file.
+2. Run `./scripts/build-app.sh release`. The script uses SwiftPM and creates `.build/app/Open in Code.app`.
+3. Copy `Open in Code.app` to `/Applications`.
+4. Hold Command and drag the app from `/Applications` to a Finder toolbar.
+5. Click the toolbar icon while viewing a folder or selecting a file.
 
 The first use asks for permission to control Finder. If permission was denied, enable **Open in Code → Finder** here:
 
 - macOS 13 or newer: **System Settings → Privacy & Security → Automation**
 - macOS 12: **System Preferences → Security & Privacy → Privacy → Automation**
 
-Release archives are configured for hardened runtime and the project publisher team. Fork maintainers should override `DEVELOPMENT_TEAM` with their own team and provide a Developer ID Application certificate. Notarize public release artifacts before distribution.
+The local packaging script applies an ad-hoc signature by default so Finder automation entitlements are available during development. Public release artifacts should be signed with a Developer ID Application certificate and notarized before distribution.
 
 ## Development
 
-Run the focused path and editor-selection tests:
+Build the SwiftPM executable and run the focused path and editor-selection tests:
 
 ```sh
+swift build
 ./scripts/test.sh
 ```
 
-Run a clean unsigned compiler verification:
+Assemble an unsigned Release app bundle for verification:
 
 ```sh
-xcodebuild \
-  -project "Open in Code.xcodeproj" \
-  -scheme "Open in Code" \
-  -configuration Release \
-  CODE_SIGNING_ALLOWED=NO \
-  clean build
+OPEN_IN_CODE_SIGNING=unsigned ./scripts/build-app.sh release
 ```
+
+Set `ARCHES="arm64 x86_64"` when a universal app is required.
 
 ## Publishing a release
 
