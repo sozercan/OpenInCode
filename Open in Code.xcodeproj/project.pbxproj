@@ -10,10 +10,10 @@
 		69C8AA89106EE02F00C4DE0D /* Finder.app in Sources */ = {isa = PBXBuildFile; fileRef = 69C8AA70106E8F5800C4DE0D /* Finder.app */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
-		C89E34F62FBA29F900F208FE /* OpenInCodeCore.m in Sources */ = {isa = PBXBuildFile; fileRef = C89E34F32FBA29F900F208FE /* OpenInCodeCore.m */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		C82F4C8C1D31B01E0084C3F5 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69C8A98D106E818900C4DE0D /* ScriptingBridge.framework */; };
 		C89E34F12FBA29F900F208FE /* vscode.icon in Resources */ = {isa = PBXBuildFile; fileRef = C89E34F02FBA29F900F208FE /* vscode.icon */; };
+		C89E34F62FBA29F900F208FE /* OpenInCodeCore.m in Sources */ = {isa = PBXBuildFile; fileRef = C89E34F32FBA29F900F208FE /* OpenInCodeCore.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -262,9 +262,11 @@
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_ENTITLEMENTS = "Open in Code.entitlements";
 				CODE_SIGN_IDENTITY = "Developer ID Application";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = VURRGRYW45;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = 57QNR9B89Q;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
