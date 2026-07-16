@@ -89,13 +89,13 @@ jobs:
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
           MACOS_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PWD }}
           EXPECTED_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          REQUIRE_DEVELOPER_ID: ${{ github.event_name == 'push' || inputs.publish }}
+          REQUIRE_SIGNED_RELEASE: ${{ github.event_name == 'push' || inputs.publish }}
         run: |
           set -euo pipefail
 
           fallback_to_adhoc() {
             local reason="$1"
-            if [ "$REQUIRE_DEVELOPER_ID" = "true" ]; then
+            if [ "$REQUIRE_SIGNED_RELEASE" = "true" ]; then
               echo "ERROR: $reason" >&2
               exit 1
             fi
@@ -104,7 +104,7 @@ jobs:
             echo "mode=adhoc" >> "$GITHUB_OUTPUT"
           }
 
-          if [ "$REQUIRE_DEVELOPER_ID" = "true" ] && [ -z "$EXPECTED_TEAM_ID" ]; then
+          if [ "$REQUIRE_SIGNED_RELEASE" = "true" ] && [ -z "$EXPECTED_TEAM_ID" ]; then
             echo "ERROR: APPLE_TEAM_ID is required for public release signing." >&2
             exit 1
           fi
@@ -164,15 +164,15 @@ jobs:
 
           APPLE_DEVELOPMENT=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" 2>/dev/null \
             | awk '/Apple Development/ { print $2; exit }' || true)
-          if [ -n "$APPLE_DEVELOPMENT" ] && [ "$REQUIRE_DEVELOPER_ID" != "true" ]; then
+          if [ -n "$APPLE_DEVELOPMENT" ]; then
             echo "::add-mask::$APPLE_DEVELOPMENT"
-            echo "::warning::Using Apple Development signing; this build will not be notarized."
+            echo "::warning::Using Apple Development signing; this release will not be notarized."
             echo "identity=$APPLE_DEVELOPMENT" >> "$GITHUB_OUTPUT"
             echo "mode=development" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          fallback_to_adhoc "The imported keychain has no usable Developer ID Application identity."
+          fallback_to_adhoc "The imported keychain has no usable Developer ID Application or Apple Development identity."
 
       - name: Build and sign release app
         id: app
@@ -183,6 +183,7 @@ jobs:
           OPEN_IN_CODE_SIGNING: unsigned
           SIGNING_IDENTITY: ${{ steps.signing.outputs.identity }}
           SIGNING_MODE: ${{ steps.signing.outputs.mode }}
+          EXPECTED_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -euo pipefail
 
@@ -220,6 +221,19 @@ jobs:
           codesign --verify --deep --strict --verbose=4 "$APP_PATH"
           ENTITLEMENTS=$(codesign -d --entitlements :- "$APP_PATH" 2>/dev/null)
           grep -F 'com.apple.security.automation.apple-events' <<< "$ENTITLEMENTS" >/dev/null
+
+          if [ "$SIGNING_MODE" != "adhoc" ]; then
+            SIGNED_TEAM_ID=$(codesign -dvv "$APP_PATH" 2>&1 \
+              | sed -n 's/^TeamIdentifier=//p')
+            if [ -z "$SIGNED_TEAM_ID" ]; then
+              echo "Signed app has no team identifier." >&2
+              exit 1
+            fi
+            if [ -n "$EXPECTED_TEAM_ID" ] && [ "$SIGNED_TEAM_ID" != "$EXPECTED_TEAM_ID" ]; then
+              echo "Signed app team ID '$SIGNED_TEAM_ID' does not match APPLE_TEAM_ID '$EXPECTED_TEAM_ID'." >&2
+              exit 1
+            fi
+          fi
 
           echo "path=$APP_PATH" >> "$GITHUB_OUTPUT"
 
