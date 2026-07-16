@@ -177,33 +177,26 @@ jobs:
       - name: Build and sign release app
         id: app
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-          BUNDLE_VERSION: ${{ steps.version.outputs.bundle_version }}
+          MARKETING_VERSION: ${{ steps.version.outputs.bundle_version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+          ARCHES: "arm64 x86_64"
+          OPEN_IN_CODE_SIGNING: unsigned
           SIGNING_IDENTITY: ${{ steps.signing.outputs.identity }}
           SIGNING_MODE: ${{ steps.signing.outputs.mode }}
         run: |
           set -euo pipefail
 
-          DERIVED_DATA="$RUNNER_TEMP/OpenInCodeDerivedData"
-          xcodebuild \
-            -project "Open in Code.xcodeproj" \
-            -scheme "Open in Code" \
-            -configuration Release \
-            -destination "generic/platform=macOS" \
-            -derivedDataPath "$DERIVED_DATA" \
-            ARCHS="arm64 x86_64" \
-            ONLY_ACTIVE_ARCH=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            clean build
+          ./scripts/build-app.sh release
 
-          APP_PATH="$DERIVED_DATA/Build/Products/Release/Open in Code.app"
+          APP_PATH="$PWD/.build/app/Open in Code.app"
           PLIST_PATH="$APP_PATH/Contents/Info.plist"
           EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/Open in Code"
 
           test -d "$APP_PATH"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $BUNDLE_VERSION" "$PLIST_PATH"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" "$PLIST_PATH"
+          test -f "$APP_PATH/Contents/Resources/Assets.car"
+          test -f "$APP_PATH/Contents/Resources/vscode.icns"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST_PATH")" = "$MARKETING_VERSION"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PLIST_PATH")" = "$BUILD_NUMBER"
 
           ARCHITECTURES=$(lipo -archs "$EXECUTABLE_PATH")
           echo "Architectures: $ARCHITECTURES"

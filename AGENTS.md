@@ -5,28 +5,29 @@
 OpenInCode is a small macOS Finder toolbar utility written in Swift. It reads the selected Finder item, or the front Finder window when nothing is selected, and opens the corresponding folder in Visual Studio Code.
 
 - Deployment target: macOS 12 or newer.
-- Build system: `Open in Code.xcodeproj`; Xcode 26 or newer is required for the current Icon Composer asset.
+- Build system: Swift Package Manager via `Package.swift`; Xcode 26 or newer is required only for `actool` to compile the current Icon Composer asset when packaging the app.
 - Swift language mode: Swift 6.
-- Dependencies: Apple frameworks only; there is no package manager or dependency-install step.
+- Dependencies: Apple frameworks only; SwiftPM resolves no external packages.
 
 ## Repository map
 
-- `main.swift`: Finder automation, user-facing errors, application lookup, and launch flow.
-- `OpenInCodeCore.swift`: testable editor-priority and Finder-path logic.
-- `Tests/OpenInCodeCoreTests.swift`: standalone Foundation test executable used by the test script.
-- `scripts/test.sh`: canonical focused test command; also validates Homebrew cask rendering.
+- `Package.swift`: SwiftPM executable and test target definitions.
+- `Sources/OpenInCode/main.swift`: Finder automation, user-facing errors, application lookup, and launch flow.
+- `Sources/OpenInCode/OpenInCodeCore.swift`: testable editor-priority and Finder-path logic.
+- `Tests/OpenInCodeTests/OpenInCodeCoreTests.swift`: XCTest coverage for editor priority and Finder paths.
+- `scripts/test.sh`: canonical focused test command; runs `swift test` and validates Homebrew cask rendering.
+- `scripts/build-app.sh`: builds thin SwiftPM executables, creates a universal binary when requested, compiles the icon, assembles the app bundle, and optionally ad-hoc signs it.
 - `scripts/render-homebrew-cask.sh`: release cask template generator.
 - `Info.plist` and `Open in Code.entitlements`: app metadata and Finder Apple Events permission.
-- `Open in Code.xcodeproj`: target membership, Swift build settings, and signing.
 - `.github/workflows/release.yml`: tag-driven universal build, signing, notarization, GitHub release, and Homebrew cask update.
 
 ## Working rules
 
 1. Check `git status --short` before editing and preserve unrelated user changes.
-2. Inspect only the files relevant to the task; do not search generated `build/` or `DerivedData/` content.
+2. Inspect only the files relevant to the task; do not search generated `.build/`, `build/`, or `DerivedData/` content.
 3. Keep changes focused. Avoid adding dependencies, new abstractions, or project files unless the task requires them.
-4. Put deterministic, UI-independent behavior in `OpenInCodeCore.swift` and cover it in `Tests/OpenInCodeCoreTests.swift`.
-5. When adding or removing source or resource files, keep the Xcode project references and target membership in sync.
+4. Put deterministic, UI-independent behavior in `Sources/OpenInCode/OpenInCodeCore.swift` and cover it in `Tests/OpenInCodeTests/OpenInCodeCoreTests.swift`.
+5. Keep SwiftPM target definitions, source layout, and packaging inputs in sync when adding or removing source or resource files.
 
 ## Behavioral invariants
 
@@ -57,15 +58,10 @@ Run the smallest relevant checks:
   ./scripts/test.sh
   ```
 
-- Application code, plist, entitlements, icon, or Xcode project changes: run the focused tests, then an unsigned Release build:
+- Application code, package manifest, plist, entitlements, icon, or packaging changes: run the focused tests, then assemble an unsigned Release app:
 
   ```sh
-  xcodebuild \
-    -project "Open in Code.xcodeproj" \
-    -scheme "Open in Code" \
-    -configuration Release \
-    CODE_SIGNING_ALLOWED=NO \
-    clean build
+  OPEN_IN_CODE_SIGNING=unsigned ./scripts/build-app.sh release
   ```
 
 Do not create tags, publish releases, notarize artifacts, update the Homebrew tap, or alter signing identities, team IDs, bundle identifiers, or release secrets unless explicitly requested.
