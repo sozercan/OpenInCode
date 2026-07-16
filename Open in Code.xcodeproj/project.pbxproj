@@ -7,31 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		69C8AA89106EE02F00C4DE0D /* Finder.app in Sources */ = {isa = PBXBuildFile; fileRef = 69C8AA70106E8F5800C4DE0D /* Finder.app */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
-		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
+		8D11072D0486CEB800E47090 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.swift */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		C82F4C8C1D31B01E0084C3F5 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69C8A98D106E818900C4DE0D /* ScriptingBridge.framework */; };
 		C89E34F12FBA29F900F208FE /* vscode.icon in Resources */ = {isa = PBXBuildFile; fileRef = C89E34F02FBA29F900F208FE /* vscode.icon */; };
-		C89E34F62FBA29F900F208FE /* OpenInCodeCore.m in Sources */ = {isa = PBXBuildFile; fileRef = C89E34F32FBA29F900F208FE /* OpenInCodeCore.m */; };
+		C89E34F62FBA29F900F208FE /* OpenInCodeCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C89E34F32FBA29F900F208FE /* OpenInCodeCore.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXBuildRule section */
-		69C8AA6F106E8F0C00C4DE0D /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			filePatterns = "*.app";
-			fileType = pattern.proxy;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE).h",
-			);
-			runOncePerArchitecture = 0;
-			script = "sdef \"$INPUT_FILE_PATH\" | sdp -fh -o \"$DERIVED_FILES_DIR\" --basename \"$INPUT_FILE_BASE\" --bundleid `defaults read \"$INPUT_FILE_PATH/Contents/Info\" CFBundleIdentifier`";
-		};
-/* End PBXBuildRule section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		694495D00B869BB500A19631 /* CopyFiles */ = {
@@ -49,17 +30,13 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
-		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		29B97316FDCFA39411CA2CEA /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		32CA4F630368D1EE00C91783 /* Open in Code_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Open in Code_Prefix.pch"; sourceTree = "<group>"; };
-		69C8A98D106E818900C4DE0D /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = /System/Library/Frameworks/ScriptingBridge.framework; sourceTree = "<absolute>"; };
-		69C8AA70106E8F5800C4DE0D /* Finder.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = Finder.app; path = /System/Library/CoreServices/Finder.app; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Open in Code.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Open in Code.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C89E34F02FBA29F900F208FE /* vscode.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = vscode.icon; sourceTree = "<group>"; };
-		C89E34F22FBA29F900F208FE /* OpenInCodeCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenInCodeCore.h; sourceTree = "<group>"; };
-		C89E34F32FBA29F900F208FE /* OpenInCodeCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenInCodeCore.m; sourceTree = "<group>"; };
+		C89E34F32FBA29F900F208FE /* OpenInCodeCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenInCodeCore.swift; sourceTree = "<group>"; };
 		C89E34F52FBA29F900F208FE /* Open in Code.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Open in Code.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -69,7 +46,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
-				C82F4C8C1D31B01E0084C3F5 /* ScriptingBridge.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,7 +56,6 @@
 			isa = PBXGroup;
 			children = (
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
-				69C8A98D106E818900C4DE0D /* ScriptingBridge.framework */,
 			);
 			name = "Linked Frameworks";
 			sourceTree = "<group>";
@@ -106,7 +81,6 @@
 		29B97314FDCFA39411CA2CEA /* Open In Code */ = {
 			isa = PBXGroup;
 			children = (
-				69C8AA70106E8F5800C4DE0D /* Finder.app */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -118,10 +92,8 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
-				32CA4F630368D1EE00C91783 /* Open in Code_Prefix.pch */,
-				29B97316FDCFA39411CA2CEA /* main.m */,
-				C89E34F22FBA29F900F208FE /* OpenInCodeCore.h */,
-				C89E34F32FBA29F900F208FE /* OpenInCodeCore.m */,
+				29B97316FDCFA39411CA2CEA /* main.swift */,
+				C89E34F32FBA29F900F208FE /* OpenInCodeCore.swift */,
 				C89E34F52FBA29F900F208FE /* Open in Code.entitlements */,
 			);
 			name = "Other Sources";
@@ -158,9 +130,6 @@
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				694495D00B869BB500A19631 /* CopyFiles */,
 			);
-			buildRules = (
-				69C8AA6F106E8F0C00C4DE0D /* PBXBuildRule */,
-			);
 			dependencies = (
 			);
 			name = "Open in Code";
@@ -175,6 +144,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Open in Code" */;
@@ -211,9 +181,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69C8AA89106EE02F00C4DE0D /* Finder.app in Sources */,
-				8D11072D0486CEB800E47090 /* main.m in Sources */,
-				C89E34F62FBA29F900F208FE /* OpenInCodeCore.m in Sources */,
+				8D11072D0486CEB800E47090 /* main.swift in Sources */,
+				C89E34F62FBA29F900F208FE /* OpenInCodeCore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -235,7 +204,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = vscode;
-				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_ENTITLEMENTS = "Open in Code.entitlements";
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
@@ -244,13 +212,13 @@
 				"COPY_PHASE_STRIP[sdk=*]" = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /Applications;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sertacozercan.openincode;
 				PRODUCT_NAME = "Open in Code";
+				SWIFT_VERSION = 6.0;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -259,7 +227,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = vscode;
-				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_ENTITLEMENTS = "Open in Code.entitlements";
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
@@ -268,13 +235,13 @@
 				DEVELOPMENT_TEAM = VURRGRYW45;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = 57QNR9B89Q;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /Applications;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sertacozercan.openincode;
 				PRODUCT_NAME = "Open in Code";
+				SWIFT_VERSION = 6.0;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

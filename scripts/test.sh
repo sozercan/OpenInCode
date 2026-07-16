@@ -5,15 +5,16 @@ repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 build_dir="$(mktemp -d "${TMPDIR:-/tmp}/OpenInCodeTests.XXXXXX")"
 trap 'rm -rf "$build_dir"' EXIT
 
-xcrun clang \
-  -fno-objc-arc \
-  -Wall \
-  -Wextra \
-  -Werror \
-  -framework Foundation \
-  -I"$repo_root" \
-  "$repo_root/OpenInCodeCore.m" \
-  "$repo_root/Tests/OpenInCodeCoreTests.m" \
+sdk_path="$(xcrun --sdk macosx --show-sdk-path)"
+architecture="$(uname -m)"
+
+xcrun swiftc \
+  -swift-version 6 \
+  -warnings-as-errors \
+  -target "${architecture}-apple-macos12.0" \
+  -sdk "$sdk_path" \
+  "$repo_root/OpenInCodeCore.swift" \
+  "$repo_root/Tests/OpenInCodeCoreTests.swift" \
   -o "$build_dir/OpenInCodeCoreTests"
 
 cask_path="$build_dir/open-in-code.rb"

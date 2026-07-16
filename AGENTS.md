@@ -2,22 +2,22 @@
 
 ## Project at a glance
 
-OpenInCode is a small macOS Finder toolbar utility written in Objective-C. It reads the selected Finder item, or the front Finder window when nothing is selected, and opens the corresponding folder in Visual Studio Code.
+OpenInCode is a small macOS Finder toolbar utility written in Swift. It reads the selected Finder item, or the front Finder window when nothing is selected, and opens the corresponding folder in Visual Studio Code.
 
 - Deployment target: macOS 12 or newer.
 - Build system: `Open in Code.xcodeproj`; Xcode 26 or newer is required for the current Icon Composer asset.
-- Memory model: manual reference counting; ARC is disabled.
+- Swift language mode: Swift 6.
 - Dependencies: Apple frameworks only; there is no package manager or dependency-install step.
 
 ## Repository map
 
-- `main.m`: Finder automation, user-facing errors, application lookup, and launch flow.
-- `OpenInCodeCore.h` / `OpenInCodeCore.m`: testable editor-priority and Finder-path logic.
-- `Tests/OpenInCodeCoreTests.m`: standalone Foundation test executable used by the test script.
+- `main.swift`: Finder automation, user-facing errors, application lookup, and launch flow.
+- `OpenInCodeCore.swift`: testable editor-priority and Finder-path logic.
+- `Tests/OpenInCodeCoreTests.swift`: standalone Foundation test executable used by the test script.
 - `scripts/test.sh`: canonical focused test command; also validates Homebrew cask rendering.
 - `scripts/render-homebrew-cask.sh`: release cask template generator.
 - `Info.plist` and `Open in Code.entitlements`: app metadata and Finder Apple Events permission.
-- `Open in Code.xcodeproj`: target membership, build settings, signing, and the build rule that generates `Finder.h` from Finder's scripting definition.
+- `Open in Code.xcodeproj`: target membership, Swift build settings, and signing.
 - `.github/workflows/release.yml`: tag-driven universal build, signing, notarization, GitHub release, and Homebrew cask update.
 
 ## Working rules
@@ -25,9 +25,8 @@ OpenInCode is a small macOS Finder toolbar utility written in Objective-C. It re
 1. Check `git status --short` before editing and preserve unrelated user changes.
 2. Inspect only the files relevant to the task; do not search generated `build/` or `DerivedData/` content.
 3. Keep changes focused. Avoid adding dependencies, new abstractions, or project files unless the task requires them.
-4. Put deterministic, UI-independent behavior in `OpenInCodeCore.*` and cover it in `Tests/OpenInCodeCoreTests.m`.
+4. Put deterministic, UI-independent behavior in `OpenInCodeCore.swift` and cover it in `Tests/OpenInCodeCoreTests.swift`.
 5. When adding or removing source or resource files, keep the Xcode project references and target membership in sync.
-6. Do not add a generated `Finder.h` to the repository; Xcode creates it during the build.
 
 ## Behavioral invariants
 
@@ -40,10 +39,10 @@ Preserve these unless the requested change explicitly replaces them:
 - Present actionable errors for Finder permission failures and missing or failed VS Code launches.
 - Keep compatibility with macOS 12; guard any newer API before use.
 
-## Objective-C conventions
+## Swift conventions
 
-- Match the existing Objective-C style and naming (`OIC` prefix for shared symbols).
-- ARC is disabled. Balance ownership with `retain`, `release`, `autorelease`, or `copy`, and keep `dealloc` implementations correct.
+- Match the existing Swift style and naming (`OIC` prefix for shared symbols).
+- Keep the application compatible with Swift 6 language mode and macOS 12.
 - Treat compiler warnings as errors in testable core code.
 - Prefer small functions with explicit failure handling over silent fallback behavior.
 
