@@ -12,7 +12,7 @@ OpenInCode is a small macOS Finder toolbar utility written in Swift. It reads th
 ## Repository map
 
 - `Package.swift`: SwiftPM executable and test target definitions.
-- `Sources/OpenInCode/main.swift`: Finder automation, user-facing errors, application lookup, and launch flow.
+- `Sources/OpenInCode/OpenInCodeApplication.swift`: Finder automation, user-facing errors, application lookup, and launch flow.
 - `Sources/OpenInCode/OpenInCodeCore.swift`: testable editor-priority and Finder-path logic.
 - `Tests/OpenInCodeTests/OpenInCodeCoreTests.swift`: XCTest coverage for editor priority and Finder paths.
 - `scripts/test.sh`: canonical focused test command; runs `swift test` and validates Homebrew cask rendering.

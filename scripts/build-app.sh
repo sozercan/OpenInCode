@@ -155,7 +155,7 @@ case "$signing_mode" in
     codesign --verify --deep --strict --verbose=2 "$app_bundle"
     ;;
   *)
-    echo "ERROR: OPEN_IN_CODE_SIGNING must be 'adhoc' or 'unsigned'" >&2
+    echo "ERROR: OPEN_IN_CODE_SIGNING must be 'adhoc', 'unsigned', or 'none'" >&2
     exit 2
     ;;
 esac

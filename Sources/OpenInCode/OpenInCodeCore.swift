@@ -7,6 +7,18 @@ func OICPreferredVSCodeBundleIdentifiers() -> [String] {
     [OICVSCodeBundleIdentifier, OICVSCodeInsidersBundleIdentifier]
 }
 
+func OICFilePathURLForURL(_ url: URL) -> URL? {
+    guard url.isFileURL else {
+        return nil
+    }
+
+    let foundationURL = url as NSURL
+    if foundationURL.isFileReferenceURL() {
+        return foundationURL.filePathURL
+    }
+    return url
+}
+
 func OICFileSystemPathForURL(_ url: URL) -> String {
     var path: String
     if #available(macOS 13.0, *) {
@@ -22,7 +34,7 @@ func OICFileSystemPathForURL(_ url: URL) -> String {
 }
 
 func OICPathForFinderURL(_ finderURL: URL?) -> String? {
-    guard var url = finderURL, url.isFileURL else {
+    guard let finderURL, var url = OICFilePathURLForURL(finderURL) else {
         return nil
     }
 
@@ -41,7 +53,10 @@ func OICPathForFinderURL(_ finderURL: URL?) -> String? {
         ) else {
             return nil
         }
-        url = resolvedURL
+        guard let filePathURL = OICFilePathURLForURL(resolvedURL) else {
+            return nil
+        }
+        url = filePathURL
     }
 
     var path = (OICFileSystemPathForURL(url) as NSString).expandingTildeInPath

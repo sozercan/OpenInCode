@@ -1,6 +1,5 @@
 import AppKit
 import Darwin
-import Dispatch
 import Foundation
 
 private let finderAutomationPermissionMessage = "Open the Automation privacy settings and allow Open in Code to control Finder, then try again."
@@ -57,26 +56,8 @@ private func pathToFrontFinderLocation() -> (path: String?, errorMessage: String
     return (path, nil)
 }
 
-private final class OICOpenAttempt: @unchecked Sendable {
-    private let lock = NSLock()
-    private var opened = false
-    private var errorMessage: String?
-
-    func complete(application: NSRunningApplication?, error: Error?) {
-        lock.lock()
-        opened = application != nil && error == nil
-        errorMessage = error?.localizedDescription
-        lock.unlock()
-    }
-
-    func result() -> (opened: Bool, errorMessage: String?) {
-        lock.lock()
-        defer { lock.unlock() }
-        return (opened, errorMessage)
-    }
-}
-
-private func openPathInPreferredVSCode(_ path: String) -> (opened: Bool, errorMessage: String?) {
+@MainActor
+private func openPathInPreferredVSCode(_ path: String) async -> (opened: Bool, errorMessage: String?) {
     guard !path.isEmpty else {
         return (false, "No folder path was available to open.")
     }
@@ -94,21 +75,21 @@ private func openPathInPreferredVSCode(_ path: String) -> (opened: Bool, errorMe
         configuration.promptsUserIfNeeded = true
         configuration.allowsRunningApplicationSubstitution = false
 
-        let completion = DispatchSemaphore(value: 0)
-        let attempt = OICOpenAttempt()
-
-        workspace.open(
-            [folderURL],
-            withApplicationAt: applicationURL,
-            configuration: configuration
-        ) { application, error in
-            attempt.complete(application: application, error: error)
-            completion.signal()
+        let result: (opened: Bool, errorMessage: String?) = await withCheckedContinuation { continuation in
+            workspace.open(
+                [folderURL],
+                withApplicationAt: applicationURL,
+                configuration: configuration
+            ) { application, error in
+                continuation.resume(
+                    returning: (
+                        application != nil && error == nil,
+                        error?.localizedDescription
+                    )
+                )
+            }
         }
 
-        completion.wait()
-
-        let result = attempt.result()
         if result.opened {
             return (true, nil)
         }
@@ -125,7 +106,7 @@ private func openPathInPreferredVSCode(_ path: String) -> (opened: Bool, errorMe
 }
 
 @MainActor
-private func run() -> Int32 {
+private func run() async -> Int32 {
     let finderResult = pathToFrontFinderLocation()
     guard let path = finderResult.path else {
         showErrorAlert(
@@ -135,7 +116,7 @@ private func run() -> Int32 {
         return 1
     }
 
-    let launchResult = openPathInPreferredVSCode(path)
+    let launchResult = await openPathInPreferredVSCode(path)
     guard launchResult.opened else {
         showErrorAlert(
             message: "Couldn’t open Visual Studio Code",
@@ -147,4 +128,10 @@ private func run() -> Int32 {
     return 0
 }
 
-exit(run())
+@main
+private enum OpenInCodeApplication {
+    @MainActor
+    static func main() async {
+        exit(await run())
+    }
+}
